@@ -1,5 +1,5 @@
 # Spotify-CLI
-A fun and colourful cli to search for and play your favorite tunes on spotify. Compatible with all modern macOS and OSX versions. 
+A fun and colourful node.js based cli to search for and play your favorite tunes on spotify. Compatible with all modern macOS and OSX versions. 
 
 ![gif-demo](https://i.imgur.com/JF1JEJY.gif)
 
