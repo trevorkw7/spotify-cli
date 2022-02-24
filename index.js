@@ -2,6 +2,7 @@
 
 import chalk from "chalk";
 import inquirer from "inquirer";
+import terminalImage from "terminal-image";
 import gradient from "gradient-string";
 import chalkAnimation from "chalk-animation";
 import nconf from "nconf";
@@ -77,6 +78,10 @@ const initSpotifyApi = async () => {
         clientSecret: SPOTIFY_CLIENT_SECRET,
     });
 };
+const resetConfig = async () => {
+    SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET = undefined;
+    initSpotifyApi();
+};
 
 const setAccessToken = async (spotifyApi) => {
     let credentialResponse = await spotifyApi.clientCredentialsGrant();
@@ -85,9 +90,7 @@ const setAccessToken = async (spotifyApi) => {
     
 
 }
-const showCurrentTrack = async (spotifyApi) => {
 
-};
 
 const play = async (type,name) => {
 
@@ -101,55 +104,70 @@ const play = async (type,name) => {
         return;
     } 
 
-    let results = null;
-    let result = null;
+    let searchResult = null;
+    let searchListings = null;
 
     const searchSpinner = createSpinner(`${gradient.rainbow(`Searching for ${name}...`)}`).start();
-    await sleep(100);
 
     switch (type) {
         case "track":
-            results = await spotifyApi.searchTracks(name);
-            result = results.body.tracks.items[0];
+            searchResult = await spotifyApi.searchTracks(name);
+            searchListings = searchResult.body.tracks.items;
             break;
         case "artist":
-            results = await spotifyApi.searchArtists(name);
-            result = results.body.artists.items[0];
+            searchResult = await spotifyApi.searchArtists(name);
+            searchListings = searchResult.body.artists.items;
             break;
-        case "playlists":
-            results = await spotifyApi.searchPlaylists(name);
-            result = results.body.playlists.items[0];
+        case "playlist":
+            searchResult = await spotifyApi.searchPlaylists(name);
+            searchListings = searchResult.body.playlists.items;
             break;
         default:
-            results = await spotifyApi.searchTracks(name);
-            result = results.body.tracks.items[0];
+            searchResult = await spotifyApi.searchTracks(name);
+            searchListings = searchResult.body.tracks.items;
             break; 
     }
 
-
-    if(result) {
+    if (searchListings.length > 1) {
         searchSpinner.success();
+        // make array of top 5 search results
+        const trackNames = searchListings.map(track => track.name).slice(0,6);
+
+        // show search results and ask user to select one
+        const selectedTrack = await inquirer.prompt({
+            name: "track",
+            type: "list",
+            message: `Which ${type} do you want to play?`,
+            choices: trackNames
+        });
+
+        let selectedIndex = (trackNames.indexOf(selectedTrack.track));
+        let result = searchListings[selectedIndex];
+
         playSpinner.update({text: `Playing ${result.name} ${result.artists ? `by ${result.artists[0].name}` : ""}`});
         playSpinner.start();
-        await sleep(100);
-        await spotifyMacClient.playTrack(result.uri);
+
+        await spotifyMacClient.playTrack(result.uri) 
+
+        playSpinner.success();
+    } else if (searchListings.length == 1) {
+        searchSpinner.success();
+        let result = searchListings[0];
+
+        playSpinner.update({text: `Playing ${result.name} ${result.artists ? `by ${result.artists[0].name}` : ""}`});
+        playSpinner.start();
+
+        await spotifyMacClient.playTrack(result.uri)  
+
         playSpinner.success();
     } else {
-        searchSpinner.fail();
-        console.log(chalk.red("Track not found!"));
+        searchSpinner.error();
+        console.log(chalk.red("Result not found!")); 
     }
 
 };
 
-const playTrack = async (name) => {
-    if (name) {
-        const searchSpinner = createSpinner(`Searching for ${name}...`).start();
-        await sleep(100);
-        let result = await spotifyApi.searchTracks(name);
-        console.log(result.body.tracks.items[0]);
-        searchSpinner.success();
-    } 
-}; 
+
 
 const pause = async () => {
     const pauseSpinner = createSpinner('Pausing...').start();
@@ -187,11 +205,70 @@ const volumeDown = async () => {
 };
 
 const setVolume = async (volume) => {
-    const setVolumeSpinner = createSpinner(`Setting volume to ${volume}`).start();
+    const setVolumeSpinner = createSpinner(`Setting ${gradient.atlas(`volume`)} to ${chalk.cyan( `${volume}`)}`).start();
     await sleep(100);
     await spotifyMacClient.setVolume(volume);
     setVolumeSpinner.success();
 };
+
+const getStatus = async () => {
+    let status;
+    let trackLength;
+    let trackPosition;
+ 
+    await spotifyMacClient.getTrack(async (err, track) => {
+        await spotifyMacClient.getState(async (err, state) => {
+            // capitalize state.state
+            state.state = state.state.charAt(0).toUpperCase() + state.state.slice(1);
+            status = chalkAnimation.neon(`${state.state + ": " + track.name + " by " + track.artist} from ${track.album}`, 1.8);
+            // convert progress from seconds to ms
+            state.position *= 1000;
+            await sleep(1000);
+            let progresBar = chalkAnimation.rainbow(generateProgressBar(state.position, track.duration), 0.5);
+            await sleep(1000);
+            progresBar.stop()
+        });
+    });
+
+}
+
+const about = async () => {
+    console.log(chalk.blue(`Yeah so this CLI was developed by this random kid called ${chalk.cyan(`@trevorkw7`)}`));
+    await sleep(1000);
+    console.log(chalk.blue(`It's pretty cool, right?`));
+    await sleep(1000);
+    console.log(chalk.blue(`If you have any questions, feel free to get in touch through the GitHub repo`));
+    await sleep(1000);
+    const githubPrompt = await inquirer.prompt({
+        name: "sendToGithub",
+        type: "confirm",
+        message: "Speaking of GitHub, wanna check it out 👀?",
+        default: true
+    });
+    if (githubPrompt.sendToGithub) {
+        const spinner = createSpinner('Opening GitHub...').start();
+        await sleep(2000);
+        await open("https://github.com/trevorkw7/Spotify-CLI");
+        spinner.success();
+    } else {
+        console.log ("Ok, maybe next time!");
+    }
+};
+
+
+const msToMinAndSec = (ms) => {
+    var minutes = Math.floor(ms / 60000);
+    var seconds = ((ms % 60000) / 1000).toFixed(0);
+    return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}
+
+const generateProgressBar = (progress, length) => {
+    const barLength = 30;
+    let leftTicks = (progress / length) * barLength;
+    let rightTicks = barLength - leftTicks;
+    let progressBar = `${(msToMinAndSec(progress))} [${'='.repeat(leftTicks)}⚪️${'-'.repeat(rightTicks)}] ${msToMinAndSec(length)}`;
+    return progressBar;
+}
 
  
 
@@ -215,6 +292,7 @@ program.command('volumeDown').action((async () => {volumeDown()}));
 program.command('volume')
     .argument('<volume>')
     .action((volume) => {setVolume(volume)});
+
 
     
 

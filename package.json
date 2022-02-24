@@ -29,6 +29,7 @@
     "os": "^0.1.2",
     "path": "^0.12.7",
     "spotify-node-applescript": "^1.1.1",
-    "spotify-web-api-node": "^5.0.2"
+    "spotify-web-api-node": "^5.0.2",
+    "terminal-image": "^2.0.0"
   }
 }
