@@ -1,0 +1,34 @@
+{
+  "name": "spotify-cli",
+  "version": "1.0.0",
+  "description": "A fun little cli to play your favorite tunes on spotify",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "spotify": "index.js"
+  },
+  "keywords": [
+    "spotify-cli"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "trevthedev",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.0.0",
+    "chalk-animation": "^1.6.0",
+    "commander": "^9.0.0",
+    "express": "^4.17.3",
+    "figlet": "^1.5.2",
+    "gradient-string": "^2.0.0",
+    "inquirer": "^8.2.0",
+    "nanospinner": "^1.0.0",
+    "nconf": "^0.11.3",
+    "open": "^8.4.0",
+    "os": "^0.1.2",
+    "path": "^0.12.7",
+    "spotify-node-applescript": "^1.1.1",
+    "spotify-web-api-node": "^5.0.2"
+  }
+}
