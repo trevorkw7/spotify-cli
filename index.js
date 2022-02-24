@@ -2,7 +2,6 @@
 
 import chalk from "chalk";
 import inquirer from "inquirer";
-import terminalImage from "terminal-image";
 import gradient from "gradient-string";
 import chalkAnimation from "chalk-animation";
 import nconf from "nconf";
