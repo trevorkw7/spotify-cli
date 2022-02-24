@@ -1,8 +1,7 @@
 # Spotify-CLI
-A fun little cli to search for and play your favorite tunes on spotify. Compatible with all modern macOS and OSX versions. 
+A fun and colourful cli to search for and play your favorite tunes on spotify. Compatible with all modern macOS and OSX versions. 
 
-![demo](https://imgur.com/a/Zz5wlvq)
-![gif-demo](https://imgur.com/a/8XmMDd5)
+![gif-demo](https://i.imgur.com/JF1JEJY.gif)
 
 ## Installation
 Clone the repo and run 
@@ -33,3 +32,7 @@ Commands:
   * status
   * about
   * help [command]      display help for command
+  
+### Example Usage
+  ![demo](https://i.imgur.com/aeFsMy5.png)
+  
