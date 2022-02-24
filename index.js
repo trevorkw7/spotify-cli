@@ -294,6 +294,9 @@ program.command('volume')
     .action((volume) => {setVolume(volume)});
 
 
+program.command('configure').action(async () => {resetConfig()});
+program.command('status').action(async () => {getStatus()});
+program.command('about').action(async () => {about()});
     
 
 program.parse(process.argv);
